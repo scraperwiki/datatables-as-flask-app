@@ -6,4 +6,4 @@ from app import app
 
 @app.route('/')
 def index():
-    return "Hello World"
+    return app.send_static_file('index.html')
