@@ -5,5 +5,5 @@ from __future__ import unicode_literals, division
 from app import app
 
 @app.route('/')
-def cars_index():
+def index():
     return "Hello World"
