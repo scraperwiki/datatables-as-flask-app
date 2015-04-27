@@ -579,17 +579,25 @@ $(function() {
       cb()
     })
   }
-    // from SQL.js example
-    var db = new SQL.Database();
-    db.run("CREATE TABLE test (col1, col2);");
-    db.run("INSERT INTO test VALUES (?,?), (?,?)", [1,111,2,222]);
-    var stmt = db.prepare("SELECT * FROM test WHERE col1 BETWEEN $start AND $end");
-    stmt.getAsObject({$start:1, $end:1});
-    stmt.bind({$start:1, $end:2});
-    while(stmt.step()) {
-      var row = stmt.getAsObject();
-      console.log(JSON.stringify(row));
+
+  function getTableNames() {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'static/test.sqlite', true);
+    xhr.responseType = 'arraybuffer';
+    xhr.onload = function(e) {
+      var uInt8Array = new Uint8Array(this.response);
+      var db = new SQL.Database(uInt8Array);
+      var table_name_result = db.exec("SELECT name FROM sqlite_master");
+      table_names = []
+      for (i=0; i < table_name_result[0].values.length; i++) {
+        table_names.push(table_name_result[0].values[i][0]);
+      }
+      window.table_names = table_names;
     }
+    xhr.send();
+  }
+
+  getTableNames();
 
   var loadAllSettings = function(cb) {
     var oData = false
