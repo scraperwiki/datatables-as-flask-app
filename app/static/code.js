@@ -608,18 +608,19 @@ $(function() {
 
 
   var loadAllSettings = function(cb) {
+    // flask: loading settings removed for now.
     var oData = false
-    scraperwiki.exec("touch allSettings.json; cat allSettings.json").done(function(content) {
-      try {
-        window.allSettings = JSON.parse(content)
-      } catch (e) {
-        window.allSettings = { tables: {}, active: null, activeType: null }
-      }
-      cb()
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-      handle_ajax_error(jqXHR, textStatus, errorThrown)
-      cb()
-    })
+    window.allSettings = { tables: {}, active: null, activeType: null }//scraperwiki.exec("touch allSettings.json; cat allSettings.json").done(function(content) {
+    //  try {
+    //    window.allSettings = JSON.parse(content)
+    //  } catch (e) {
+     //   window.allSettings = { tables: {}, active: null, activeType: null }
+    //  }
+    cb()
+    //}).fail(function(jqXHR, textStatus, errorThrown) {
+    //  handle_ajax_error(jqXHR, textStatus, errorThrown)
+    //  cb()
+    //})
   }
 
   // Fetch all_grids.html if available
