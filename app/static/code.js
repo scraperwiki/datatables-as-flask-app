@@ -197,7 +197,10 @@ var convertData = function(table_name, column_names) {
         "(select count(*) from " + escapeSQL(table_name) + ") as total, " +
         "(select count(*) from " + escapeSQL(table_name) + where + ") as display_total",
         function (data) {
-          counts = data[0]
+          //counts = data[0]
+          counts = {}
+          counts.total = data[0][0]
+          counts.display_total = data[0][1]
           cb()
         }, handle_ajax_error)
     }
