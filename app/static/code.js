@@ -482,8 +482,6 @@ var constructTabs = function(active_table) {
   var publicTables = _.filter(window.tables, isPublicTable)
   populateTabs(publicTables, 'table', 'Table')
 
-  populateTabs(window.grids, 'grid', 'Unstructured table')
-
   var devTables = _.filter(window.tables, isDevTable)
   var devUl = populateTabs(devTables, 'table', 'Developer table')
   devUl.attr('id', 'developer-tables')
@@ -506,7 +504,7 @@ var isPublicTable = function(table_name) {
 // Make all the DataTables and their tabs
 var constructDataTables = function(first_table_name) {
 
-  var all_tables_and_grids = window.tables.concat(window.grids)
+  var all_tables_and_grids = window.tables
   var have_first_table = first_table_name &&
                          _.contains(all_tables_and_grids, first_table_name)
 
@@ -555,7 +553,6 @@ var toggleDevTables = function() {
 // flask: commented out these lines for now.
 //var allSettings // stores the sql.meta output
 //var settings // stores user settings like selected table etc
-var sqliteEndpoint
 var tables // list of table names
 var grids // list of grid names
 var currentActiveTable
