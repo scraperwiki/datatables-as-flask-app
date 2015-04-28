@@ -580,19 +580,19 @@ $(function() {
     })
   }
 
-  function fetchSQLMetaJS() {
+  function fetchSQLMetaJS(cb) {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', 'static/test.sqlite', true);
     xhr.responseType = 'arraybuffer';
     xhr.onload = function(e) {
       var uInt8Array = new Uint8Array(this.response);
-      var db = new SQL.Database(uInt8Array);
-      var table_name_result = db.exec("SELECT name FROM sqlite_master");
-      var table_names = table_name_result[0].values;
+      db = new SQL.Database(uInt8Array);
+      var table_name_result = db.exec("SELECT name FROM sqlite_master WHERE type='table'");
+      var table_names = _.flatten(table_name_result[0].values);
       meta = {}
       meta['table'] = {}
       for (i=0; i < table_names.length; i++) {
-        var stmt = db.prepare("SELECT * FROM " + table_names[i] + " LIMIT 1");
+        var stmt = db.prepare("SELECT * FROM " + escapeSQL(table_names[i]) + " LIMIT 1");
         stmt.step();
         var column_names = stmt.getColumnNames();
         meta['table'][table_names[i]] = {};
@@ -601,11 +601,10 @@ $(function() {
       }
       meta['databaseType'] = 'sqlite3'
       meta['grid'] = {}
-      db.close()
-      console.log(meta);
       window.meta = meta;
       window.tables = filterAndSortTables(_.keys(window.meta.table));
-      window.grids = filterAndSortGrids(_.keys(window.meta.grid));
+      //window.grids = filterAndSortGrids(_.keys(window.meta.grid));
+      cb();
     }
     xhr.send();
   }
