@@ -606,7 +606,6 @@ $(function() {
     xhr.send();
   }
 
-  fetchSQLMetaJS();
 
   var loadAllSettings = function(cb) {
     var oData = false
