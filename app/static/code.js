@@ -560,6 +560,11 @@ var currentActiveTableIndex
 var currentActiveTableType
 var db
 
+scraperwiki.sql = function(sql, cb) {
+	var result = db.exec(sql)
+	return cb(result[0].values)
+}
+
 $(function() {
   // flask: commented out these lines for now.
   //window.settings = scraperwiki.readSettings()
