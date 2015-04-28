@@ -206,26 +206,13 @@ var convertData = function(table_name, column_names) {
     }
 
     var rows = []
+
     var getRows = function(cb) {
-      oSettings.jqXHR = $.ajax({
-        "dataType": 'json',
-        "type": "GET",
-        "url": window.sqliteEndpoint,
-        "data": { q: query },
-        "success": function(response) {
-          // ScraperWiki returns a list of dicts.
-          // This converts it to a list of lists.
-          for (var i = 0; i < response.length; i++) {
-            var row = []
-            _.each(window.meta.table[table_name].columnNames, function(col) {
-              row.push(prettifyCell(response[i][col]))
-            })
-            rows.push(row)
-          }
+      scraperwiki.sql(query,
+        function (data) {
+          rows = data
           cb()
-        },
-        "error": handle_ajax_error
-      })
+        }, handle_ajax_error)
     }
 
     var populateDataTable = function() {
