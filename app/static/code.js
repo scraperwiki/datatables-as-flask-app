@@ -681,8 +681,8 @@ $(function() {
     }
   }
 
-  // flask: Commented this line out for now.
-  //async.parallel([fetchSQLMeta, loadAllSettings, fetchAllGrids], whenLoaded)
+  // flask: remove fetchAllGrids for now.
+  async.parallel([fetchSQLMetaJS, loadAllSettings], whenLoaded)
 
   // Handle sidebar tab clicks
   $(document).on('click', '#table-sidebar li a', function(e) {
