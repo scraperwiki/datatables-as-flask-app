@@ -448,7 +448,7 @@ scraperwiki.sql = function(sql, cb) {
 }
 
 $(function() {
-  function fetchSQLMetaJS(cb) {
+  function fetchSQLMeta(cb) {
     var table_name_result = db.exec("SELECT name FROM sqlite_master WHERE type='table'");
     var table_names = _.flatten(table_name_result[0].values);
     meta = {}
@@ -527,7 +527,7 @@ $(function() {
   }
 
   connectToSQL( function () {
-    async.parallel([fetchSQLMetaJS, loadAllSettings], whenLoaded)
+    async.parallel([fetchSQLMeta, loadAllSettings], whenLoaded)
   })
 
   // Handle sidebar tab clicks
