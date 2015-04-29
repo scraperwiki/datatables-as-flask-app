@@ -516,7 +516,7 @@ $(function() {
 
   function connectToSQL (cb) {
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', 'static/test.sqlite', true);
+    xhr.open('GET', 'static/scraperwiki.sqlite', true);
     xhr.responseType = 'arraybuffer';
     xhr.onload = function(e) {
       var uInt8Array = new Uint8Array(this.response);
