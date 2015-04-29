@@ -449,31 +449,23 @@ scraperwiki.sql = function(sql, cb) {
 
 $(function() {
   function fetchSQLMetaJS(cb) {
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', 'static/test.sqlite', true);
-    xhr.responseType = 'arraybuffer';
-    xhr.onload = function(e) {
-      var uInt8Array = new Uint8Array(this.response);
-      db = new SQL.Database(uInt8Array);
-      var table_name_result = db.exec("SELECT name FROM sqlite_master WHERE type='table'");
-      var table_names = _.flatten(table_name_result[0].values);
-      meta = {}
-      meta['table'] = {}
-      for (i=0; i < table_names.length; i++) {
-        var stmt = db.prepare("SELECT * FROM " + escapeSQL(table_names[i]) + " LIMIT 1");
-        stmt.step();
-        var column_names = stmt.getColumnNames();
-        meta['table'][table_names[i]] = {};
-        meta['table'][table_names[i]]['columnNames'] = column_names;
-        meta['table'][table_names[i]]['type'] = 'table';
-      }
-      meta['databaseType'] = 'sqlite3'
-      meta['grid'] = {}
-      window.meta = meta;
-      window.tables = filterAndSortTables(_.keys(window.meta.table));
-      cb();
+    var table_name_result = db.exec("SELECT name FROM sqlite_master WHERE type='table'");
+    var table_names = _.flatten(table_name_result[0].values);
+    meta = {}
+    meta['table'] = {}
+    for (i=0; i < table_names.length; i++) {
+      var stmt = db.prepare("SELECT * FROM " + escapeSQL(table_names[i]) + " LIMIT 1");
+      stmt.step();
+      var column_names = stmt.getColumnNames();
+      meta['table'][table_names[i]] = {};
+      meta['table'][table_names[i]]['columnNames'] = column_names;
+      meta['table'][table_names[i]]['type'] = 'table';
     }
-    xhr.send();
+    meta['databaseType'] = 'sqlite3'
+    meta['grid'] = {}
+    window.meta = meta;
+    window.tables = filterAndSortTables(_.keys(window.meta.table));
+    cb();
   }
 
 
@@ -522,8 +514,21 @@ $(function() {
     }
   }
 
-  // flask: remove fetchAllGrids for now.
-  async.parallel([fetchSQLMetaJS, loadAllSettings], whenLoaded)
+  function connectToSQL (cb) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'static/test.sqlite', true);
+    xhr.responseType = 'arraybuffer';
+    xhr.onload = function(e) {
+      var uInt8Array = new Uint8Array(this.response);
+      db = new SQL.Database(uInt8Array);
+      cb()
+    }
+    xhr.send();
+  }
+
+  connectToSQL( function () {
+    async.parallel([fetchSQLMetaJS, loadAllSettings], whenLoaded)
+  })
 
   // Handle sidebar tab clicks
   $(document).on('click', '#table-sidebar li a', function(e) {
