@@ -78,49 +78,31 @@ var prettifyCell = function(content) {
   return content
 }
 
-// flask: commented out these lines for now
 // Save known state of all tabs, and active tab.
 // oSettings is ignored (it's only there because DataTables provides it)
 // oData should either be a DataTables object, or null (in the case of a grid)
-//var saveState = function(oSettings, oData) {
-// console.log('save', window.currentActiveTable, window.currentActiveTableType,
-//              oData)
-//
-//  window.allSettings['active'] = window.currentActiveTable
-//  window.allSettings['activeType'] = window.currentActiveTableType
-//  window.allSettings['tables'][window.currentActiveTable] = oData
-//
-//  var j = JSON.stringify(window.allSettings)
-//  var fname = escapeshell("allSettings.json")
-//
-//  scraperwiki.exec(
-//   "echo -n <<ENDOFJSON >" + fname + ".new.$$ " + escapeshell(j) + "\nENDOFJSON\n" +
-//    "mv " + fname + ".new.$$ " + fname,
-//   function(content) {
-//      if (content != "") {
-//        scraperwiki.alert("Unexpected saveState response!", content, "error")
-//      }
-//    }, handle_ajax_error)
-//}
+var saveState = function(oSettings, oData) {
+  window.allSettings['active'] = window.currentActiveTable
+  window.allSettings['activeType'] = window.currentActiveTableType
+  window.allSettings['tables'][window.currentActiveTable] = oData
+  localStorage.setItem( 'DataTables_'+window.location.pathname, JSON.stringify(window.allSettings) );
+}
 
 // Restore column status from the view's box's filesystem.
-// flask: commented out these lines for now.
-// var loadState = function(oSettings) {
-//  if (window.currentActiveTable in window.allSettings['tables']) {
-//    oData = window.allSettings['tables'][window.currentActiveTable]
+var loadState = function(oSettings) {
+  if (window.currentActiveTable in window.allSettings['tables']) {
+    oData = window.allSettings['tables'][window.currentActiveTable]
     // Force the display length we calculated was suitable when first
     // making the table (rather than using the saved setting).
-//    flask: commented out these lines for now.
-//    oData.iLength = oSettings._iDisplayLength
+    oData.iLength = oSettings._iDisplayLength
     // Force to first page, as confuses users
-//    oData.iStart = 0
-//    oData.iEnd = 0
-//  } else {
-//    oData = false
-// }
-//
-//  return oData
-//}
+    oData.iStart = 0
+    oData.iEnd = 0
+  } else {
+    oData = false
+ }
+  return oData
+}
 
 // Escape identifiers
 var escapeSQL = function(column_name) {
@@ -396,9 +378,8 @@ var constructDataTable = function(table_type, table_index, table_name) {
     "fnServerData": convertData(table_name, column_names),
     "fnInitComplete": initComplete,
     "bStateSave": true,
-    // flask: commented out these lines for now.
-    //"fnStateSave": saveState,
-    //"fnStateLoad": loadState,
+    "fnStateSave": saveState,
+    "fnStateLoad": loadState,
     "oLanguage": {
       "sEmptyTable": "This table is empty"
      }
@@ -540,9 +521,6 @@ var toggleDevTables = function() {
 }
 
 // Main entry point
-// flask: commented out these lines for now.
-//var allSettings // stores the sql.meta output
-//var settings // stores user settings like selected table etc
 var tables // list of table names
 var grids // list of grid names
 var currentActiveTable
@@ -556,10 +534,6 @@ scraperwiki.sql = function(sql, cb) {
 }
 
 $(function() {
-  // flask: commented out these lines for now.
-  //window.settings = scraperwiki.readSettings()
-  //window.sqliteEndpoint = window.settings.target.url + '/sqlite'
-
   var fetchSQLMeta = function (cb) {
     scraperwiki.sql.meta().done(function(newMeta) {
       window.meta = newMeta
@@ -603,19 +577,17 @@ $(function() {
 
 
   var loadAllSettings = function(cb) {
-    // flask: loading settings removed for now.
     var oData = false
-    window.allSettings = { tables: {}, active: null, activeType: null }//scraperwiki.exec("touch allSettings.json; cat allSettings.json").done(function(content) {
-    //  try {
-    //    window.allSettings = JSON.parse(content)
-    //  } catch (e) {
-     //   window.allSettings = { tables: {}, active: null, activeType: null }
-    //  }
+    var content = localStorage.getItem('DataTables_'+window.location.pathname)
+    window.allSettings = { tables: {}, active: null, activeType: null }
+    if (content != null) {
+      try {
+        window.allSettings = JSON.parse(content)
+      } catch (e) {
+        // Deliberately empty.
+      }
+    }
     cb()
-    //}).fail(function(jqXHR, textStatus, errorThrown) {
-    //  handle_ajax_error(jqXHR, textStatus, errorThrown)
-    //  cb()
-    //})
   }
 
   // Fetch all_grids.html if available
