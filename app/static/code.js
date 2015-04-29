@@ -214,77 +214,15 @@ var convertData = function(table_name, column_names) {
 // 'table_index' should be the integer position of the datatable
 //               in the list of all tables/grids
 // 'table_name' is obviously the SQL table name, or the grid checksum
-var showTableOrGrid = function(table_type, table_index, table_name) {
-
-  // Special case: if we want a grid and we have an all_grids
-  if (table_type == 'grid' && $('#all_grids').length) {
-    hidePreviousTable()
-    $('#all_grids').show()
-    $('#content').scrollspy('refresh')
-
-    var table_y = $('#all_grids #' + table_name).position().top
-    table_y += $('#content').scrollTop()
-    var all_grids_padding = parseInt($('#all_grids').css('padding-top'))
-    $('#content').scrollTop(table_y - all_grids_padding)
-
-    return
-  }
-
-  if (table_type == 'grid') {
-    constructGrid(table_type, table_index, table_name)
-  } else {
+var showTable = function(table_type, table_index, table_name) {
     constructDataTable(table_type, table_index, table_name)
   }
 
-}
 
 var hidePreviousTable = function() {
   $(".maintable:visible").hide()
 }
 
-
-// Given $table, a <table> element on the page,
-// AJAX in the contents of the required grid,
-// and put it in the page.
-var constructGrid = function(table_type, table_index, table_name) {
-
-  // Show table if it exists already
-  var wrapper_id = table_type + "_" + table_index
-  var $outer = $("#" + wrapper_id)
-  if($outer.length){
-    hidePreviousTable()
-    $outer.show()
-    return
-  }
-
-  // Table doesn't exist, so create it
-  var grid_meta = window.meta.grid[table_name]
-  if (grid_meta && grid_meta.url) {
-
-    $.get(grid_meta.url).done(function(html) {
-      var $outer = $('<div class="maintable" id="' + wrapper_id + '">' +
-                     '<table class="table table-striped table-bordered innertable display"></table>' +
-                     '</div>').hide()
-      $('#content').append($outer)
-
-      var $table = $outer.find("table")
-      var innerHtml = $('<div>').html(html).find('table').html()
-      $table.html(innerHtml)
-
-      hidePreviousTable()
-      $outer.show()
-
-      saveState(null, null)
-    }).fail(handle_ajax_error)
-
-  } else {
-    scraperwiki.alert(
-      'This grid has no URL',
-      'We can&rsquo;t load the content of this grid. ' +
-      'Try clearing your data and importing again.',
-      'error')
-  }
-}
 
 // Given $table, a <table> element on the page,
 // fill the table with data and make it into an
@@ -407,17 +345,7 @@ var constructTabs = function(active_table) {
 
     var $a = $('<a>').appendTo($li)
 
-    if (type == 'grid') {
-      $a.attr('href', '#' + table_name)
-      if ('title' in window.meta.grid[table_name]) {
-        $a.text(window.meta.grid[table_name]['title'])
-      } else {
-        $a.text(table_name)
-      }
-    } else {
-      $a.text(table_name)
-    }
-
+    $a.text(table_name)
     $a.attr('data-table-index', table_index)
     $a.attr('data-table-name', table_name)
     $a.attr('data-table-type', type)
@@ -437,12 +365,7 @@ var constructTabs = function(active_table) {
     $ul.append('<li class="nav-header">' + subtitle + '</li>')
 
     $.each(tables, function(i, table_name) {
-      var i = 0
-      if (type == "grid") {
-        i = window.grids.indexOf(table_name)
-      } else {
-        i = window.tables.indexOf(table_name)
-      }
+      var i = window.tables.indexOf(table_name)
       var tab = constructTab(type, i, table_name, active_table)
       $ul.append(tab)
     })
@@ -475,14 +398,14 @@ var isPublicTable = function(table_name) {
 // Make all the DataTables and their tabs
 var constructDataTables = function(first_table_name) {
 
-  var all_tables_and_grids = window.tables
+  var all_tables = window.tables
   var have_first_table = first_table_name &&
-                         _.contains(all_tables_and_grids, first_table_name)
+                         _.contains(all_tables, first_table_name)
 
   if (!have_first_table) {
     // Get the first non underscore table if there is one, or the first
     // table overall
-    first_table_name = _.reject(all_tables_and_grids, isDevTable)[0] ||
+    first_table_name = _.reject(all_tables, isDevTable)[0] ||
                        window.tables[0]
   }
 
@@ -504,14 +427,6 @@ var filterAndSortTables = function(messyTableNames) {
   return topTables.concat(bottomTables)
 }
 
-var filterAndSortGrids = function(unsortedGrids) {
-  var visibleGrids = _.reject(unsortedGrids, function(grid) {
-    return grid.slice(0, 1) == '_'
-  })
-  return _.sortBy(visibleGrids, function(gridChecksum) {
-    return window.meta.grid[gridChecksum]['number']
-  })
-}
 
 var toggleDevTables = function() {
   $('#developer-tables .nav-header').nextAll().toggle()
@@ -522,7 +437,6 @@ var toggleDevTables = function() {
 
 // Main entry point
 var tables // list of table names
-var grids // list of grid names
 var currentActiveTable
 var currentActiveTableIndex
 var currentActiveTableType
@@ -534,18 +448,6 @@ scraperwiki.sql = function(sql, cb) {
 }
 
 $(function() {
-  var fetchSQLMeta = function (cb) {
-    scraperwiki.sql.meta().done(function(newMeta) {
-      window.meta = newMeta
-      window.tables = filterAndSortTables(_.keys(window.meta.table))
-      window.grids = filterAndSortGrids(_.keys(window.meta.grid))
-      cb()
-    }).fail(function() {
-      handle_ajax_error(jqXHR, textStatus, errorThrown)
-      cb()
-    })
-  }
-
   function fetchSQLMetaJS(cb) {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', 'static/test.sqlite', true);
@@ -569,7 +471,6 @@ $(function() {
       meta['grid'] = {}
       window.meta = meta;
       window.tables = filterAndSortTables(_.keys(window.meta.table));
-      //window.grids = filterAndSortGrids(_.keys(window.meta.grid));
       cb();
     }
     xhr.send();
@@ -588,34 +489,6 @@ $(function() {
       }
     }
     cb()
-  }
-
-  // Fetch all_grids.html if available
-  var fetchAllGrids = function(cb) {
-    $.get(window.settings.target.url + '/http/grids/all_grids.html').done(function(html) {
-      var $all_grids_wrapper = $('<div class="maintable" id="all_grids">').hide()
-      $all_grids_wrapper.html(html)
-
-      $all_grids_wrapper.find('table').each(function(){
-        $(this).addClass('table table-striped table-bordered innertable display')
-      })
-
-      $('#content').append($all_grids_wrapper)
-
-      // Listen for scroll events in #content and highlight the
-      // relevant sidebar tab (used only in the all_grids case)
-      var all_grids_padding = parseInt($('#all_grids').css('padding-top'))
-      $('#content').scrollspy({ offset: all_grids_padding + 1 })
-
-      cb()
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-      // Ignore 404's, which will be caused in the faily common case
-      // that when there is no all_grids.html file.
-      if (jqXHR.status != 404) {
-        handle_ajax_error(jqXHR, textStatus, errorThrown)
-      }
-      cb()
-    })
   }
 
   var whenLoaded = function (err, results) {
@@ -666,9 +539,9 @@ $(function() {
     window.currentActiveTableIndex = $a.attr('data-table-index')
     window.currentActiveTableType = $a.attr('data-table-type')
 
-    showTableOrGrid(window.currentActiveTableType,
-                    window.currentActiveTableIndex,
-                    window.currentActiveTable)
+    showTable(window.currentActiveTableType,
+              window.currentActiveTableIndex,
+              window.currentActiveTable)
   })
 
   $(document).on('click', '#developer-tables .nav-header', toggleDevTables)
