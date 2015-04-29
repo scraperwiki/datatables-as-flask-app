@@ -3,3 +3,6 @@
 Using [`sql.js`](https://github.com/kripken/sql.js) which is MIT licensed
 and [`datatables-view-tool`](https://github.com/scraperwiki/datatables-view-tool)
 whose licence is in `app/static`.
+
+Add a SQLite database named `scraperwiki.sqlite` to `app/static/` to
+use.
