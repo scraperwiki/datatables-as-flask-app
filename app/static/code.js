@@ -174,27 +174,41 @@ var convertData = function(table_name, column_names) {
 
     var counts
     var getColumnCounts = function(cb) {
-      scraperwiki.sql(
+      localScraperwiki.sql(
         "select " +
         "(select count(*) from " + escapeSQL(table_name) + ") as total, " +
-        "(select count(*) from " + escapeSQL(table_name) + where + ") as display_total",
-        function (data) {
-          //counts = data[0]
-          counts = {}
-          counts.total = data[0][0]
-          counts.display_total = data[0][1]
+        "(select count(*) from " + escapeSQL(table_name) + where + ") as display_total").done(function(data) {
+          counts = data[0]
           cb()
-        }, handle_ajax_error)
+        }).fail(function() {
+          handle_ajax_error(jqXHR, textStatus, errorThrown)
+          cb()
+        })
     }
 
     var rows = []
-
     var getRows = function(cb) {
-      scraperwiki.sql(query,
-        function (data) {
-          rows = data
+      oSettings.jqXHR = $.ajax({
+        "dataType": 'json',
+        "type": "GET",
+        "url": window.sqliteEndpoint,
+        "data": { q: query,
+                  method: "sql",
+                  box: "tool" },
+        "success": function(response) {
+          // ScraperWiki returns a list of dicts.
+          // This converts it to a list of lists.
+          for (var i = 0; i < response.length; i++) {
+            var row = []
+            _.each(window.meta.table[table_name].columnNames, function(col) {
+              row.push(prettifyCell(response[i][col]))
+            })
+            rows.push(row)
+          }
           cb()
-        }, handle_ajax_error)
+        },
+        "error": handle_ajax_error
+      })
     }
 
     var populateDataTable = function() {
@@ -204,7 +218,6 @@ var convertData = function(table_name, column_names) {
         "iTotalDisplayRecords": counts.display_total // after filtering
       })
     }
-
     async.parallel([getColumnCounts, getRows], populateDataTable)
   }
 }
@@ -441,33 +454,48 @@ var currentActiveTable
 var currentActiveTableIndex
 var currentActiveTableType
 var db
+var sqliteEndpoint
+var localScraperwiki = {}
 
-scraperwiki.sql = function(sql, cb) {
-	var result = db.exec(sql)
-	return cb(result[0].values)
+localScraperwiki.sql = function(sql) {
+  var options;
+  options = {
+    url: window.sqliteEndpoint,
+    type: "GET",
+    dataType: "json",
+    data: { method: "sql",
+            box: "tool",
+            q: sql, }
+  };
+  return $.ajax(options);
 }
 
-$(function() {
-  function fetchSQLMeta(cb) {
-    var table_name_result = db.exec("SELECT name FROM sqlite_master WHERE type='table'");
-    var table_names = _.flatten(table_name_result[0].values);
-    meta = {}
-    meta['table'] = {}
-    for (i=0; i < table_names.length; i++) {
-      var stmt = db.prepare("SELECT * FROM " + escapeSQL(table_names[i]) + " LIMIT 1");
-      stmt.step();
-      var column_names = stmt.getColumnNames();
-      meta['table'][table_names[i]] = {};
-      meta['table'][table_names[i]]['columnNames'] = column_names;
-      meta['table'][table_names[i]]['type'] = 'table';
-    }
-    meta['databaseType'] = 'sqlite3'
-    meta['grid'] = {}
-    window.meta = meta;
-    window.tables = filterAndSortTables(_.keys(window.meta.table));
-    cb();
-  }
+localScraperwiki.sql.meta = function() {
+  /* Modified from scraperwiki.coffee */
+  var options;
+  options = {
+    url: window.sqliteEndpoint,
+    type: "GET",
+    dataType: "json",
+    data: { method: "meta",
+            box: "tool" },
+  };
+  return $.ajax(options);
+};
 
+$(function() {
+  /* Can't replace with a local URL until cgi-bin running locally. */
+  window.sqliteEndpoint = scraperwiki.readSettings().source.url + '/cgi-bin/dumptruck_web.py'
+  var fetchSQLMeta = function (cb) {
+      localScraperwiki.sql.meta().done(function(newMeta) {
+        window.meta = newMeta
+        window.tables = filterAndSortTables(_.keys(window.meta.table))
+        cb()
+      }).fail(function() {
+        handle_ajax_error(jqXHR, textStatus, errorThrown)
+        cb()
+    })
+  }
 
   var loadAllSettings = function(cb) {
     var oData = false
@@ -514,21 +542,7 @@ $(function() {
     }
   }
 
-  function connectToSQL (cb) {
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', 'static/scraperwiki.sqlite', true);
-    xhr.responseType = 'arraybuffer';
-    xhr.onload = function(e) {
-      var uInt8Array = new Uint8Array(this.response);
-      db = new SQL.Database(uInt8Array);
-      cb()
-    }
-    xhr.send();
-  }
-
-  connectToSQL( function () {
-    async.parallel([fetchSQLMeta, loadAllSettings], whenLoaded)
-  })
+  async.parallel([fetchSQLMeta, loadAllSettings], whenLoaded)
 
   // Handle sidebar tab clicks
   $(document).on('click', '#table-sidebar li a', function(e) {
