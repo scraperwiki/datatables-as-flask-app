@@ -5,6 +5,7 @@ RUN apt-get update && \
         curl \
         git \
         python-pip \
+        sqlite3 \
         gunicorn
 
 RUN mkdir /home/datatables-view && \
