@@ -4,6 +4,7 @@ run:    build
 	    --read-only \
 	    --rm \
 	    --volume /tmp \
+	    -v $(CURDIR)/scraperwiki.sqlite:/home/datatables-view/scraperwiki.sqlite:ro \
 	    datatables-view
 
 build:
