@@ -165,7 +165,7 @@ var convertData = function(table_name, column_names) {
       }
     }
 
-    var query = "select * " +
+    var query = "* " +
                 " from " + escapeSQL(table_name) +
                 where +
                 order_by +
@@ -174,8 +174,7 @@ var convertData = function(table_name, column_names) {
 
     var counts
     var getColumnCounts = function(cb) {
-      localScraperwiki.sql(
-        "select " +
+      select(
         "(select count(*) from " + escapeSQL(table_name) + ") as total, " +
         "(select count(*) from " + escapeSQL(table_name) + where + ") as display_total").done(function(data) {
           counts = data[0]
@@ -191,10 +190,8 @@ var convertData = function(table_name, column_names) {
       oSettings.jqXHR = $.ajax({
         "dataType": 'json',
         "type": "GET",
-        "url": window.sqliteEndpoint,
-        "data": { q: query,
-                  method: "sql",
-                  box: "tool" },
+        "url": window.selectEndpoint,
+        "data": { q: query },
         "success": function(response) {
           // ScraperWiki returns a list of dicts.
           // This converts it to a list of lists.
@@ -454,40 +451,36 @@ var currentActiveTable
 var currentActiveTableIndex
 var currentActiveTableType
 var db
-var sqliteEndpoint
-var localScraperwiki = {}
+var selectEndpoint
 
-localScraperwiki.sql = function(sql) {
+var select = function(query) {
   var options;
   options = {
-    url: window.sqliteEndpoint,
+    url: window.selectEndpoint,
     type: "GET",
     dataType: "json",
-    data: { method: "sql",
-            box: "tool",
-            q: sql, }
+    data: { q: query, }
   };
   return $.ajax(options);
 }
 
-localScraperwiki.sql.meta = function() {
+var meta = function() {
   /* Modified from scraperwiki.coffee */
   var options;
   options = {
-    url: window.sqliteEndpoint,
+    url: window.metaEndpoint,
     type: "GET",
     dataType: "json",
-    data: { method: "meta",
-            box: "tool" },
   };
   return $.ajax(options);
 };
 
 $(function() {
   /* Can't replace with a local URL until cgi-bin running locally. */
-  window.sqliteEndpoint = scraperwiki.readSettings().source.url + '/cgi-bin/dumptruck_web.py'
+  window.selectEndpoint = window.location.href + 'select'
+  window.metaEndpoint = window.location.href + 'meta'
   var fetchSQLMeta = function (cb) {
-      localScraperwiki.sql.meta().done(function(newMeta) {
+      meta().done(function(newMeta) {
         window.meta = newMeta
         window.tables = filterAndSortTables(_.keys(window.meta.table))
         cb()
