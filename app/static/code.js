@@ -165,7 +165,7 @@ var convertData = function(table_name, column_names) {
       }
     }
 
-    var query = "* " +
+    var query = "*" +
                 " from " + escapeSQL(table_name) +
                 where +
                 order_by +
