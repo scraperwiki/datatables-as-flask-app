@@ -9,15 +9,15 @@ whose licence is the same as the extra code here (see LICENCE).
 
 ## How to use?
 
-Either:
+1. Add your own SQLite database named `scraperwiki.sqlite` to the top level of
+   this repository.
 
-* Install the requirements and run using `local_run.py`. By default, you
-  can connect via http://127.0.0.1:5000.
+2. To view your database in a browser:
 
-or:
+   * Install the requirements and run using `local_run.py`. By default, you
+     can connect via http://127.0.0.1:5000.
 
-* Run in a `docker` container via the Makefile `make run`. By default,
-  you can connect via http://0.0.0.0:8000.
+   or:
 
-Add your own SQLite database named `scraperwiki.sqlite` to the top level of
-this repository.
+   * Run in a `docker` container via the Makefile: `make run`. By default,
+     you can connect via http://0.0.0.0:8000.
