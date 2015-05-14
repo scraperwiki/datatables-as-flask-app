@@ -187,25 +187,21 @@ var convertData = function(table_name, column_names) {
 
     var rows = []
     var getRows = function(cb) {
-      oSettings.jqXHR = $.ajax({
-        "dataType": 'json',
-        "type": "GET",
-        "url": window.selectEndpoint,
-        "data": { q: query },
-        "success": function(response) {
+      select(query).done(function(data) {
           // ScraperWiki returns a list of dicts.
           // This converts it to a list of lists.
-          for (var i = 0; i < response.length; i++) {
+          for (var i = 0; i < data.length; i++) {
             var row = []
             _.each(window.meta.table[table_name].columnNames, function(col) {
-              row.push(prettifyCell(response[i][col]))
+              row.push(prettifyCell(data[i][col]))
             })
             rows.push(row)
           }
           cb()
-        },
-        "error": handle_ajax_error
-      })
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+          handle_ajax_error(jqXHR, textStatus, errorThrown)
+          cb()
+        })
     }
 
     var populateDataTable = function() {
