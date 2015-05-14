@@ -5,7 +5,7 @@
 View SQLite databases in your browser using `datatables`.
 
 Using [`datatables-view-tool`](https://github.com/scraperwiki/datatables-view-tool)
-whose licence is in `app/static`.
+whose licence is the same as the extra code here (see LICENCE).
 
 ## How to use?
 
