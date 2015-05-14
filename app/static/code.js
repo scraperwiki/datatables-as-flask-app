@@ -179,7 +179,7 @@ var convertData = function(table_name, column_names) {
         "(select count(*) from " + escapeSQL(table_name) + where + ") as display_total").done(function(data) {
           counts = data[0]
           cb()
-        }).fail(function() {
+        }).fail(function(jqXHR, textStatus, errorThrown) {
           handle_ajax_error(jqXHR, textStatus, errorThrown)
           cb()
         })
@@ -484,7 +484,7 @@ $(function() {
         window.meta = newMeta
         window.tables = filterAndSortTables(_.keys(window.meta.table))
         cb()
-      }).fail(function() {
+      }).fail(function(jqXHR, textStatus, errorThrown) {
         handle_ajax_error(jqXHR, textStatus, errorThrown)
         cb()
     })
