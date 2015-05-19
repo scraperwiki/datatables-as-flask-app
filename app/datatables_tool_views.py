@@ -12,7 +12,7 @@ import scraperwiki
 
 @app.route('/')
 def index():
-    return app.send_static_file('index.html')
+    return app.send_static_file('datatables_tool_index.html')
 
 
 # TODO: Do we need to, and how do we make the database read-only?
