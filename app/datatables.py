@@ -3,20 +3,21 @@
 from __future__ import (unicode_literals, division,
                         print_function, absolute_import)
 from collections import OrderedDict
-from flask import request
-from app import app
+from flask import request, Blueprint
 
 import json
 import scraperwiki
 
+datatables = Blueprint('datatables', __name__, static_folder='static',
+                       static_url_path='/static/datatables')
 
-@app.route('/')
+@datatables.route('/')
 def index():
-    return app.send_static_file('datatables_tool_index.html')
+    return datatables.send_static_file('datatables_tool_index.html')
 
 
 # TODO: Do we need to, and how do we make the database read-only?
-@app.route('/select')
+@datatables.route('/select')
 def sql_select():
     query = request.args.get('q')
     # TODO: Error handling?
@@ -24,7 +25,7 @@ def sql_select():
     return json.dumps(query_result)
 
 
-@app.route('/meta')
+@datatables.route('/meta')
 def meta():
     tables_data = scraperwiki.sql.select('name,type FROM sqlite_master '
                                          'WHERE type in ("table", "view")')
