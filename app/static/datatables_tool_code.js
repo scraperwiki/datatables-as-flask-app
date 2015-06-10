@@ -473,8 +473,8 @@ var meta = function() {
 
 $(function() {
   /* Can't replace with a local URL until cgi-bin running locally. */
-  window.selectEndpoint = window.location.href + 'select'
-  window.metaEndpoint = window.location.href + 'meta'
+  window.selectEndpoint =  '../sql_backend/select'
+  window.metaEndpoint = '../sql_backend/meta'
   var fetchSQLMeta = function (cb) {
       meta().done(function(newMeta) {
         window.meta = newMeta
